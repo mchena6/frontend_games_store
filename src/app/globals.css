@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand raw colors */
+  --brand-cyan: #00f4f4;
+  --brand-graphite: #3d3d3d;
+  --brand-orange: #ff9900;
+
+  /* Default theme base */
+  --background: #080a0f;
+  --foreground: #94a3b8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Brand core tokens */
+  --color-brand-cyan: #00f4f4;
+  --color-brand-orange: #ff9900;
+  --color-brand-graphite: #3d3d3d;
+
+  /* Action & Highlight tokens */
+  --color-primary: #00f4f4;
+  --color-primary-hover: #00d2d2;
+  --color-primary-fg: #080a0f;
+
+  --color-accent: #ff9900;
+  --color-accent-hover: #e68a00;
+  --color-accent-fg: #080a0f;
+
+  /* Typography hierarchy tokens */
+  --color-title: #ffffff;
+  --color-subtitle: #e2e8f0;
+  --color-body: #94a3b8;
+  --color-muted: #64748b;
+
+  /* Typography alias tokens */
+  --color-text-title: #ffffff;
+  --color-text-subtitle: #e2e8f0;
+  --color-text-body: #94a3b8;
+  --color-text-muted: #64748b;
+
+  /* Surfaces & Backgrounds */
+  --color-canvas: #080a0f;
+  --color-surface: #0f131d;
+  --color-navbar: #0b0e17;
+  --color-footer: #06070b;
+
+  /* Backgrounds alias tokens */
+  --color-bg-canvas: #080a0f;
+  --color-bg-surface: #0f131d;
+  --color-bg-navbar: #0b0e17;
+  --color-bg-footer: #06070b;
+
+  /* Cards & Borders */
+  --color-card: #141824;
+  --color-card-hover: #1a2030;
+  --color-bg-card: #141824;
+  --color-bg-card-hover: #1a2030;
+  --color-card-border: #2d3548;
+  --color-card-border-hover: #00f4f4;
+  --color-border-card: #2d3548;
+  --color-border-card-hover: #00f4f4;
+  --color-border-subtle: #222938;
+
+  /* Gamer Glow Shadows */
+  --shadow-neon-cyan: 0 0 15px rgba(0, 244, 244, 0.35);
+  --shadow-neon-cyan-lg: 0 0 25px rgba(0, 244, 244, 0.5);
+  --shadow-neon-orange: 0 0 15px rgba(255, 153, 0, 0.35);
+  --shadow-neon-orange-lg: 0 0 25px rgba(255, 153, 0, 0.5);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  min-height: 100vh;
 }
