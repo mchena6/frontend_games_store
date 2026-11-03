@@ -192,3 +192,35 @@ export async function iniciarCheckout() {
   }
   return { init_point: data.init_point };
 }
+
+// ORDENES
+
+// Obtener ordenes
+export async function getOrders(status = "") {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await llamar(`${ENDPOINTS.orders}${query}`);
+  if (!res || !res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : data.results || [];
+}
+
+// Obtener una orden por ID
+export async function getOrderById(id) {
+  const res = await llamar(`${ENDPOINTS.orders}${id}/`);
+  if (!res || !res.ok) return null;
+  return res.json();
+}
+// Cancelar una orden pendiente
+export async function cancelarOrder(orderId) {
+  const res = await llamar(`${ENDPOINTS.orders}${orderId}/cancelar/`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+
+  if (!res || !res.ok) {
+    return { error: "No se pudo cancelar la orden." };
+  }
+
+  revalidatePath("/orders");
+  return { success: true };
+}
