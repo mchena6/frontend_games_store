@@ -36,6 +36,7 @@ export async function login(_estadoPrevio, formData) {
     path: "/",
     maxAge: 60 * 10,
   });
+  redirect("/")
 }
 
 // Cerrar sesión
