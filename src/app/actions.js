@@ -302,3 +302,28 @@ export async function getBrands() {
   const data = await fetchAllPublic(ENDPOINTS.brands + "?ordering=name");
   return data.map((b) => ({ id: b.id, name: b.name }));
 }
+
+// Especificaciones técnicas de un producto
+export async function getProductSpecifications(productId) {
+  const data = await fetchAllPublic(
+    ENDPOINTS.productSpecifications + "?product=" + encodeURIComponent(productId)
+  );
+  return data.map((item) => ({
+    id: item.id,
+    name: item.specification ? item.specification.name : "",
+    value: item.value,
+  }));
+}
+
+// Rating promedio de un producto (null si no tiene reseñas)
+export async function getProductRating(productId) {
+  const url = API_URL + ENDPOINTS.productRatings + "?product=" + encodeURIComponent(productId);
+  const res = await fetch(url, { cache: "no-store" }).catch(() => null);
+  if (!res || !res.ok) return null;
+
+  const data = await res.json();
+  const rating = data.results ? data.results[0] : null;
+  if (!rating || rating.total_reviews === 0) return null;
+
+  return { average: rating.average_rating, total: rating.total_reviews };
+}

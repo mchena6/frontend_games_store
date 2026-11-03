@@ -6,6 +6,8 @@ export const ENDPOINTS = {
   products: "/api/products/",
   categories: "/api/categories/",
   brands: "/api/brands/",
+  productSpecifications: "/api/product-specifications/",
+  productRatings: "api/product-ratings/",
   carts: "/api/carts/",
   orders: "/api/orders/",
   users: "/api/users/",
