@@ -36,6 +36,7 @@ export async function login(_estadoPrevio, formData) {
     path: "/",
     maxAge: 60 * 10,
   });
+  redirect("/")
 }
 
 // Cerrar sesión
@@ -123,6 +124,86 @@ export async function borrarProducto(id) {
   if (!res.ok && res.status !== 404) return { error: "No se pudo borrar." };
   revalidatePath("/products");
   return {};
+}
+
+// Obtener productos (lectura pública)
+
+const PAGE_SIZE = 10; // igual que PAGE_SIZE en settings.py de Django
+
+// Ordena los datos que llegan de Django para usarlos más fácil
+function normalizeProduct(raw) {
+  const relation = (value) =>
+    value && typeof value === "object" ? { id: value.id, name: value.name } : null;
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    description: raw.description ?? "",
+    price: Number(raw.price ?? 0),
+    image: raw.image ?? null,
+    category: relation(raw.category),
+    brand: relation(raw.brand),
+  };
+}
+
+// Obtener una página de productos
+export async function getProducts({ page = 1, search = "", category = "", brand = "", ordering = "" } = {}) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (search) params.set("search", search);
+  if (category) params.set("category", category);
+  if (brand) params.set("brand", brand);
+  if (ordering) params.set("ordering", ordering);
+  const query = params.toString();
+
+  // Arma la URL: http://127.0.0.1:8000/api/products/  (+ ?page=2 si hace falta)
+  let url = API_URL + ENDPOINTS.products;
+  if (query) url = url + "?" + query;
+
+  const res = await fetch(url, { cache: "no-store" }).catch(() => null);
+
+  if (!res) throw new Error("No se pudo conectar con la API.");
+  if (res.status === 404) return { count: 0, results: [], totalPages: 0 };
+  if (!res.ok) throw new Error("La API respondió " + res.status + " al pedir productos.");
+
+  const data = await res.json();
+  return {
+    count: data.count,
+    results: data.results.map(normalizeProduct),
+    totalPages: Math.ceil(data.count / PAGE_SIZE),
+  };
+}
+
+// Buscar el nombre de una categoría o marca por su id
+async function getRelation(path, id) {
+  const res = await fetch(API_URL + path + id + "/", { cache: "no-store" }).catch(() => null);
+  if (!res || !res.ok) return null;
+  const data = await res.json();
+  return { id: data.id, name: data.name };
+}
+
+// Obtener UN producto por su id
+export async function getProduct(id) {
+  const url = API_URL + ENDPOINTS.products + encodeURIComponent(id) + "/";
+  const res = await fetch(url, { cache: "no-store" }).catch(() => null);
+
+  if (!res) throw new Error("No se pudo conectar con la API.");
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("La API respondió " + res.status + " al pedir el producto.");
+
+  const data = await res.json();
+  const product = normalizeProduct(data);
+
+  // El detalle de la API trae category y brand solo como números:
+  // en ese caso pedimos los nombres a /api/categories/ y /api/brands/
+  if (typeof data.category === "number") {
+    product.category = await getRelation(ENDPOINTS.categories, data.category);
+  }
+  if (typeof data.brand === "number") {
+    product.brand = await getRelation(ENDPOINTS.brands, data.brand);
+  }
+
+  return product;
 }
 
 // CARRITO DE COMPRAS
@@ -223,4 +304,58 @@ export async function cancelarOrder(orderId) {
 
   revalidatePath("/orders");
   return { success: true };
+}
+// Traer TODAS las páginas de un endpoint público (sin token)
+async function fetchAllPublic(path) {
+  let url = API_URL + path;
+  let all = [];
+
+  while (url) {
+    const res = await fetch(url, { cache: "no-store" }).catch(() => null);
+    if (!res || !res.ok) return all;
+
+    const data = await res.json();
+    if (Array.isArray(data)) return data;
+
+    all = all.concat(data.results ?? []);
+    url = data.next;
+  }
+  return all;
+}
+
+// Categorías para el filtro
+export async function getCategories() {
+  const data = await fetchAllPublic(ENDPOINTS.categories + "?ordering=name");
+  return data.map((c) => ({ id: c.id, name: c.name }));
+}
+
+// Marcas para el filtro
+export async function getBrands() {
+  const data = await fetchAllPublic(ENDPOINTS.brands + "?ordering=name");
+  return data.map((b) => ({ id: b.id, name: b.name }));
+}
+
+// Especificaciones técnicas de un producto
+export async function getProductSpecifications(productId) {
+  const data = await fetchAllPublic(
+    ENDPOINTS.productSpecifications + "?product=" + encodeURIComponent(productId)
+  );
+  return data.map((item) => ({
+    id: item.id,
+    name: item.specification ? item.specification.name : "",
+    value: item.value,
+  }));
+}
+
+// Rating promedio de un producto (null si no tiene reseñas)
+export async function getProductRating(productId) {
+  const url = API_URL + ENDPOINTS.productRatings + "?product=" + encodeURIComponent(productId);
+  const res = await fetch(url, { cache: "no-store" }).catch(() => null);
+  if (!res || !res.ok) return null;
+
+  const data = await res.json();
+  const rating = data.results ? data.results[0] : null;
+  if (!rating || rating.total_reviews === 0) return null;
+
+  return { average: rating.average_rating, total: rating.total_reviews };
 }
