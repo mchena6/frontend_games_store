@@ -125,6 +125,50 @@ export async function borrarProducto(id) {
   return {};
 }
 
+// Obtener productos (lectura pública)
+
+const PAGE_SIZE = 10; // igual que PAGE_SIZE en settings.py de Django
+
+// Ordena los datos que llegan de Django para usarlos más fácil
+function normalizeProduct(raw) {
+  const relation = (value) =>
+    value && typeof value === "object" ? { id: value.id, name: value.name } : null;
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    description: raw.description ?? "",
+    price: Number(raw.price ?? 0),
+    image: raw.image ?? null,
+    category: relation(raw.category),
+    brand: relation(raw.brand),
+  };
+}
+
+// Obtener una página de productos
+export async function getProducts({ page = 1 } = {}) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  const query = params.toString();
+
+  // Arma la URL: http://127.0.0.1:8000/api/products/  (+ ?page=2 si hace falta)
+  let url = API_URL + ENDPOINTS.products;
+  if (query) url = url + "?" + query;
+
+  const res = await fetch(url, { cache: "no-store" }).catch(() => null);
+
+  if (!res) throw new Error("No se pudo conectar con la API.");
+  if (res.status === 404) return { count: 0, results: [], totalPages: 0 };
+  if (!res.ok) throw new Error("La API respondió " + res.status + " al pedir productos.");
+
+  const data = await res.json();
+  return {
+    count: data.count,
+    results: data.results.map(normalizeProduct),
+    totalPages: Math.ceil(data.count / PAGE_SIZE),
+  };
+}
+
 // CARRITO DE COMPRAS
 
 // Obtener carrito activo del usuario
