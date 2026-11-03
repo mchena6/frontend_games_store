@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { getToken } from "@/lib/auth";
-import { logout } from "@/app/actions";
+import { logout, getMyCart } from "@/app/actions";
 
 export default async function Navbar() {
   const token = await getToken();
   const isLoggedIn = !!token;
+
+  let cart = null;
+  if (isLoggedIn) {
+    cart = await getMyCart();
+  }
+  const totalItems = cart?.total_quantity || 0
 
   return (
     <nav className="bg-bg-navbar border-b border-card-border text-text-body sticky top-0 z-50 shadow-md">
@@ -33,9 +39,11 @@ export default async function Navbar() {
               <>
                 <Link href="/shopping-cart" className="flex items-center hover:text-white transition-colors gap-2 text-sm font-medium">
                   <span className="text-lg">🛒</span> <span className="hidden sm:inline">Carrito</span>
-                  <span className="bg-brand-cyan text-primary-fg text-xs font-bold px-1.5 py-0.5 rounded-full shadow-neon-cyan">
-                    1
-                  </span>
+                  {totalItems > 0 && (
+                    <span className="bg-brand-cyan text-primary-fg text-xs font-bold px-1.5 py-0.5 rounded-full shadow-neon-cyan">
+                      {totalItems}
+                    </span>
+                  )}
                 </Link>
 
                 <form action={logout}>
