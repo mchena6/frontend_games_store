@@ -11,7 +11,7 @@ import {
 import { getToken } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { ProductReviews } from "@/components/products/ProductReviews";
-import Image from "next/image";
+import AddToCart from "@/components/products/AddToCart";
 
 export const metadata = {
   title: "Producto | Games Store",
@@ -112,12 +112,7 @@ async function ProductDetail({ params }) {
           )}
 
           {/* Boton para agregar al carrito */}
-          <button
-            type="button"
-            className="mt-auto rounded-xl bg-primary py-3 text-lg font-semibold text-primary-fg transition hover:bg-primary-hover hover:shadow-neon-cyan"
-          >
-            Agregar al carrito
-          </button>
+          <AddToCart product={product} token={token} />
         </div>
       </article>
       {/* Especificacion del producto */}
