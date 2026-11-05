@@ -47,7 +47,7 @@ export function CartItemRow({ item }) {
         </span>
         <Link
           href={`/products/${product.id}`}
-          className="text-title font-bold text-lg truncate mt-0.5"
+          className="text-title font-bold text-lg truncate mt-0.5 overflow-hidden whitespace-nowrap block hover:text-primary transition"
         >
           {product.name || "Producto sin nombre"}
         </Link>
