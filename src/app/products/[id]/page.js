@@ -1,8 +1,17 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { getProduct, getProductSpecifications, getProductRating } from "@/app/actions";
+import {
+  getProduct,
+  getProductSpecifications,
+  getProductRating,
+  getReviews,
+} from "@/app/actions";
+import { getToken } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
+import { ProductReviews } from "@/components/products/ProductReviews";
+import Image from "next/image";
 
 export const metadata = {
   title: "Producto | Games Store",
@@ -11,7 +20,10 @@ export const metadata = {
 export default function ProductDetailPage({ params }) {
   return (
     <div className="space-y-6">
-      <Link href="/products" className="inline-block text-sm text-body transition hover:text-primary">
+      <Link
+        href="/products"
+        className="inline-block text-sm text-body transition hover:text-primary"
+      >
         ← Volver a productos
       </Link>
 
@@ -25,17 +37,22 @@ export default function ProductDetailPage({ params }) {
 async function ProductDetail({ params }) {
   const { id } = await params;
 
-  const [product, specifications, rating] = await Promise.all([
-    getProduct(id),
-    getProductSpecifications(id),
-    getProductRating(id),
-  ]);
+  const [product, specifications, rating, reviews, token, email] =
+    await Promise.all([
+      getProduct(id),
+      getProductSpecifications(id),
+      getProductRating(id),
+      getReviews(id),
+      getToken(),
+      cookies().then((jar) => jar.get("email")?.value ?? ""),
+    ]);
 
   if (!product) notFound();
 
   return (
     <div className="space-y-10">
       <article className="grid gap-10 md:grid-cols-2">
+        {/* Informacion principal del producto */}
         <div className="overflow-hidden rounded-2xl border border-card-border bg-white">
           {product.image ? (
             <img
@@ -50,6 +67,7 @@ async function ProductDetail({ params }) {
           )}
         </div>
 
+        {/* Categoria y marca del producto */}
         <div className="flex flex-col gap-5">
           {(product.category || product.brand) && (
             <div className="flex flex-wrap gap-2 text-sm">
@@ -72,19 +90,28 @@ async function ProductDetail({ params }) {
             </div>
           )}
 
-          <h1 className="text-3xl font-bold text-title sm:text-4xl">{product.name}</h1>
+          <h1 className="text-3xl font-bold text-title sm:text-4xl">
+            {product.name}
+          </h1>
 
+          {/* Rating y precio */}
           <Rating rating={rating} />
 
-          <p className="text-3xl font-bold text-accent">{formatPrice(product.price)}</p>
+          <p className="text-3xl font-bold text-accent">
+            {formatPrice(product.price)}
+          </p>
 
+          {/* Descripcion */}
           {product.description && (
             <div className="rounded-2xl border border-border-subtle bg-surface p-5">
               <h2 className="mb-2 font-semibold text-subtitle">Descripción</h2>
-              <p className="whitespace-pre-line leading-relaxed text-body">{product.description}</p>
+              <p className="whitespace-pre-line leading-relaxed text-body">
+                {product.description}
+              </p>
             </div>
           )}
 
+          {/* Boton para agregar al carrito */}
           <button
             type="button"
             className="mt-auto rounded-xl bg-primary py-3 text-lg font-semibold text-primary-fg transition hover:bg-primary-hover hover:shadow-neon-cyan"
@@ -93,10 +120,12 @@ async function ProductDetail({ params }) {
           </button>
         </div>
       </article>
-
+      {/* Especificacion del producto */}
       {specifications.length > 0 && (
         <section className="rounded-2xl border border-card-border bg-card p-6">
-          <h2 className="mb-4 text-xl font-semibold text-title">Especificaciones</h2>
+          <h2 className="mb-4 text-xl font-semibold text-title">
+            Especificaciones
+          </h2>
           <dl className="divide-y divide-border-subtle">
             {specifications.map((spec) => (
               <div key={spec.id} className="grid grid-cols-2 gap-4 py-3">
@@ -107,10 +136,18 @@ async function ProductDetail({ params }) {
           </dl>
         </section>
       )}
+
+      {/* Reviews del producto */}
+      <ProductReviews
+        productId={product.id}
+        reviews={reviews}
+        isLoggedIn={!!token}
+        currentUserEmail={email}
+      />
     </div>
   );
 }
-
+// OBtener y mostrar rating
 function Rating({ rating }) {
   if (!rating) {
     return <p className="text-sm text-muted">Todavía no tiene reseñas</p>;
@@ -127,15 +164,21 @@ function Rating({ rating }) {
       </span>
       <span className="text-sm text-body">
         <span className="sr-only">Puntuación: </span>
-        {rating.average.toFixed(1)} ({rating.total} {rating.total === 1 ? "reseña" : "reseñas"})
+        {rating.average.toFixed(1)} ({rating.total}{" "}
+        {rating.total === 1 ? "reseña" : "reseñas"})
       </span>
     </div>
   );
 }
 
+// Skeleton para estado de carga del producto
 function DetailSkeleton() {
   return (
-    <div role="status" aria-label="Cargando producto" className="grid animate-pulse gap-10 md:grid-cols-2">
+    <div
+      role="status"
+      aria-label="Cargando producto"
+      className="grid animate-pulse gap-10 md:grid-cols-2"
+    >
       <div className="aspect-square rounded-2xl bg-card" />
       <div className="space-y-5">
         <div className="h-6 w-40 rounded-full bg-card" />
