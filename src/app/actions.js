@@ -27,21 +27,49 @@ export async function login(_estadoPrevio, formData) {
   if (!res.ok)
     return { error: "La API respondió con un error. Intenta de nuevo." };
 
-  // Guardar el token en cookies
+  // Acceder al token y el usuario
   const { access } = await res.json();
-  (await cookies()).set("access", access, {
+  const username = String(formData.get("username") ?? "");
+  const jar = await cookies();
+
+  // Extraer el email del payload del token JWT
+  let email = "";
+  try {
+    const payloadBase64 = access.split(".")[1];
+
+    const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+
+    const payloadDecoded = JSON.parse(atob(base64));
+
+    email = String(payloadDecoded.email ?? "");
+  } catch (error) {
+    console.error("No se pudo extraer el email del token:", error);
+  }
+
+  const cookieOptions = {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 10,
-  });
-  redirect("/")
+  };
+
+  // Guardar datos en cookies
+  jar.set("access", access, cookieOptions);
+  jar.set("username", username, cookieOptions);
+  if (email) {
+    jar.set("email", email, cookieOptions);
+    console.log("Email extraído del token:", email);
+  }
+
+  redirect("/");
 }
 
 // Cerrar sesión
 export async function logout() {
-  (await cookies()).delete("access");
+  const jar = await cookies();
+  jar.delete("access");
+  jar.delete("username");
   redirect("/login");
 }
 
@@ -133,7 +161,9 @@ const PAGE_SIZE = 10; // igual que PAGE_SIZE en settings.py de Django
 // Ordena los datos que llegan de Django para usarlos más fácil
 function normalizeProduct(raw) {
   const relation = (value) =>
-    value && typeof value === "object" ? { id: value.id, name: value.name } : null;
+    value && typeof value === "object"
+      ? { id: value.id, name: value.name }
+      : null;
 
   return {
     id: raw.id,
@@ -147,7 +177,13 @@ function normalizeProduct(raw) {
 }
 
 // Obtener una página de productos
-export async function getProducts({ page = 1, search = "", category = "", brand = "", ordering = "" } = {}) {
+export async function getProducts({
+  page = 1,
+  search = "",
+  category = "",
+  brand = "",
+  ordering = "",
+} = {}) {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (search) params.set("search", search);
@@ -164,7 +200,8 @@ export async function getProducts({ page = 1, search = "", category = "", brand 
 
   if (!res) throw new Error("No se pudo conectar con la API.");
   if (res.status === 404) return { count: 0, results: [], totalPages: 0 };
-  if (!res.ok) throw new Error("La API respondió " + res.status + " al pedir productos.");
+  if (!res.ok)
+    throw new Error("La API respondió " + res.status + " al pedir productos.");
 
   const data = await res.json();
   return {
@@ -176,7 +213,9 @@ export async function getProducts({ page = 1, search = "", category = "", brand 
 
 // Buscar el nombre de una categoría o marca por su id
 async function getRelation(path, id) {
-  const res = await fetch(API_URL + path + id + "/", { cache: "no-store" }).catch(() => null);
+  const res = await fetch(API_URL + path + id + "/", {
+    cache: "no-store",
+  }).catch(() => null);
   if (!res || !res.ok) return null;
   const data = await res.json();
   return { id: data.id, name: data.name };
@@ -189,7 +228,10 @@ export async function getProduct(id) {
 
   if (!res) throw new Error("No se pudo conectar con la API.");
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error("La API respondió " + res.status + " al pedir el producto.");
+  if (!res.ok)
+    throw new Error(
+      "La API respondió " + res.status + " al pedir el producto.",
+    );
 
   const data = await res.json();
   const product = normalizeProduct(data);
@@ -338,7 +380,9 @@ export async function getBrands() {
 // Especificaciones técnicas de un producto
 export async function getProductSpecifications(productId) {
   const data = await fetchAllPublic(
-    ENDPOINTS.productSpecifications + "?product=" + encodeURIComponent(productId)
+    ENDPOINTS.productSpecifications +
+      "?product=" +
+      encodeURIComponent(productId),
   );
   return data.map((item) => ({
     id: item.id,
@@ -349,7 +393,11 @@ export async function getProductSpecifications(productId) {
 
 // Rating promedio de un producto (null si no tiene reseñas)
 export async function getProductRating(productId) {
-  const url = API_URL + ENDPOINTS.productRatings + "?product=" + encodeURIComponent(productId);
+  const url =
+    API_URL +
+    ENDPOINTS.productRatings +
+    "?product=" +
+    encodeURIComponent(productId);
   const res = await fetch(url, { cache: "no-store" }).catch(() => null);
   if (!res || !res.ok) return null;
 
@@ -358,4 +406,79 @@ export async function getProductRating(productId) {
   if (!rating || rating.total_reviews === 0) return null;
 
   return { average: rating.average_rating, total: rating.total_reviews };
+}
+
+// Normalizar una reseña
+function normalizarReview(raw) {
+  return {
+    id: raw.id,
+    user: raw.user ?? "",
+    rating: Number(raw.rating),
+    review: raw.review ?? "",
+    created: raw.created,
+  };
+}
+
+// Refrescar el rating de un producto
+async function refrescarRating(productId) {
+  const rating = await getProductRating(productId);
+  revalidatePath(`/products/${productId}`);
+  return rating;
+}
+
+// Obtener todas las reseñas de un producto ordenadas por fecha
+export async function getReviews(productId) {
+  const data = await fetchAllPublic(
+    ENDPOINTS.reviews +
+      "?product=" +
+      encodeURIComponent(productId) +
+      "&ordering=-created",
+  );
+  return data.map(normalizarReview);
+}
+
+// Agregar una review
+export async function crearReview(productId, { rating, review }) {
+  const res = await llamar(ENDPOINTS.reviews, {
+    method: "POST",
+    body: JSON.stringify({
+      product: Number(productId),
+      rating: Number(rating),
+      review,
+    }),
+  });
+  if (!res) return { error: "No se pudo conectar con la API." };
+  if (res.status === 401 || res.status === 403)
+    return { error: "Tu sesión venció. Vuelve a iniciar sesión." };
+  if (!res.ok) return { error: "No se pudo publicar la reseña." };
+  await refrescarRating(productId);
+  return { success: true };
+}
+
+// Editar una review
+export async function editarReview(reviewId, productId, { rating, review }) {
+  const res = await llamar(`${ENDPOINTS.reviews}${reviewId}/`, {
+    method: "PATCH",
+    body: JSON.stringify({ rating: Number(rating), review }),
+  });
+  if (!res) return { error: "No se pudo conectar con la API." };
+  if (res.status === 401 || res.status === 403)
+    return { error: "Tu sesión venció. Vuelve a iniciar sesión." };
+  if (!res.ok) return { error: "No se pudo editar la reseña." };
+  await refrescarRating(productId);
+  return { success: true };
+}
+
+// Eliminar una review
+export async function borrarReview(reviewId, productId) {
+  const res = await llamar(`${ENDPOINTS.reviews}${reviewId}/`, {
+    method: "DELETE",
+  });
+  if (!res) return { error: "No se pudo conectar con la API." };
+  if (res.status === 401 || res.status === 403)
+    return { error: "Tu sesión venció. Vuelve a iniciar sesión." };
+  if (!res.ok && res.status !== 404)
+    return { error: "No se pudo borrar la reseña." };
+  await refrescarRating(productId);
+  return { success: true };
 }
