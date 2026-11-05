@@ -259,6 +259,22 @@ export async function getMyCart() {
   return data.results?.[0] || null;
 }
 
+// Agregar producto al carrito
+export async function agregarAlCarrito(productId, cantidad = 1) {
+  const res = await llamar(`/api/carts/add-item/`, {
+    method: "POST",
+    body: JSON.stringify({
+      product_id: Number(productId),
+      quantity: Number(cantidad),
+    }),
+  });
+  if (!res || !res.ok) {
+    return { error: "Error al agregar el producto al carrito." };
+  }
+  revalidatePath("/shopping-cart");
+  return { success: true };
+}
+
 // Aumentar cantidad de un cartitem
 export async function incrementarItem(cartItemId) {
   const res = await llamar(`/api/cart-items/${cartItemId}/incrementar/`, {
