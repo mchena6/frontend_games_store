@@ -111,14 +111,6 @@ export function ProductReviews({
         <ul className="divide-y divide-border-subtle">
           {/* Lista de reviews */}
           {reviews.map((item) => {
-            console.log(
-              "Sesión:",
-              isLoggedIn,
-              "Actual:",
-              currentUserEmail,
-              "Review de:",
-              item.user,
-            );
             const current_autor =
               isLoggedIn &&
               item.user?.trim().toLowerCase() ===
