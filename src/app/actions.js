@@ -300,6 +300,7 @@ export async function decrementarItem(cartItemId) {
   return { success: true };
 }
 
+// Eliminar un producto del carrito
 export async function eliminarItem(cartItemId) {
   const res = await llamar(`/api/cart-items/${cartItemId}/delete-item/`, {
     method: "DELETE",
