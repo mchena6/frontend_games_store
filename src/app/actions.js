@@ -498,3 +498,22 @@ export async function borrarReview(reviewId, productId) {
   await refrescarRating(productId);
   return { success: true };
 }
+
+// WISHLIST
+
+// Agregar un producto a la wishlist del usuario
+export async function agregarAWishlist(productId) {
+  const res = await llamar(`${ENDPOINTS.wishlist}add-product/`, {
+    method: "POST",
+    body: JSON.stringify({ product_id: Number(productId) }),
+  });
+  if (!res) return { error: "No se pudo conectar con la API." };
+  if (res.status === 401 || res.status === 403)
+    return { error: "Tu sesión vencio. Vuelve a iniciar sesion." };
+  if (res.status === 400) {
+    const data = await res.json();
+    return { error: data.error || "No se pudo agregar a la wishlist." };
+  }
+  if (!res.ok) return { error: "No se pudo agregar a la wishlist." };
+  return { success: true };
+}

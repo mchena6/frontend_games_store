@@ -12,6 +12,7 @@ import { getToken } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { ProductReviews } from "@/components/products/ProductReviews";
 import AddToCart from "@/components/products/AddToCart";
+import { WishlistButton } from "@/components/products/WishlistButton";
 
 export const metadata = {
   title: "Producto | Games Store",
@@ -113,6 +114,8 @@ async function ProductDetail({ params }) {
 
           {/* Boton para agregar al carrito */}
           <AddToCart product={product} token={token} />
+          {/* Boton para agregar a la whislist */}
+          <WishlistButton productId={product.id} isLoggedIn={!!token}/ >
         </div>
       </article>
       {/* Especificacion del producto */}
