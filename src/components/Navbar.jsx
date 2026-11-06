@@ -37,6 +37,10 @@ export default async function Navbar() {
           <div className="flex items-center space-x-4">
             {isLoggedIn ? (
               <>
+                <Link href="/orders" className="flex items-center hover:text-white transition-colors gap-2 text-sm font-medium">
+                  <span className="text-lg">📦</span> <span className="hidden sm:inline">Órdenes</span>
+                </Link>
+                
                 <Link href="/shopping-cart" className="flex items-center hover:text-white transition-colors gap-2 text-sm font-medium">
                   <span className="text-lg">🛒</span> <span className="hidden sm:inline">Carrito</span>
                   {totalItems > 0 && (
