@@ -300,6 +300,18 @@ export async function decrementarItem(cartItemId) {
   return { success: true };
 }
 
+// Eliminar un producto del carrito
+export async function eliminarItem(cartItemId) {
+  const res = await llamar(`/api/cart-items/${cartItemId}/delete-item/`, {
+    method: "DELETE",
+  });
+  if (!res || !res.ok) {
+    return { error: "Error al eliminar el producto del carrito." };
+  }
+  revalidatePath("/shopping-cart");
+  return { success: true };
+}
+
 // Vaciar carrito completo
 export async function vaciarCarrito(cartId) {
   const res = await llamar(`${ENDPOINTS.carts}${cartId}/vaciar/`, {

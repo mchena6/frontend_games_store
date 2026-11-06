@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { incrementarItem, decrementarItem } from "@/app/actions";
+import DeleteCartItem from "./DeleteCartItem";
 
 export function CartItemRow({ item }) {
   const [isPending, startTransition] = useTransition();
@@ -84,6 +85,9 @@ export function CartItemRow({ item }) {
           +
         </button>
       </div>
+
+      {/* Boton para eliminar producto del carrito */}
+      <DeleteCartItem cartItemId={item.id} />
 
       {/* Subtotal del item */}
       <div className="text-right min-w-22">

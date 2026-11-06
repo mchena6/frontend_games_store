@@ -12,7 +12,7 @@ export const ENDPOINTS = {
   carts: "/api/carts/",
   orders: "/api/orders/",
   users: "/api/users/",
-  wishlist: "/api/wishlist/",
+  wishlist: "/api/wishlists/",
   reviews: "/api/reviews/",
 };
 
