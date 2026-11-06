@@ -59,7 +59,6 @@ export async function login(_estadoPrevio, formData) {
   jar.set("username", username, cookieOptions);
   if (email) {
     jar.set("email", email, cookieOptions);
-    console.log("Email extraído del token:", email);
   }
 
   redirect("/");
@@ -513,6 +512,16 @@ export async function borrarReview(reviewId, productId) {
 
 // WISHLIST
 
+// Obtener la wishlist del usuario
+export async function getMyWishlist() {
+  const res = await llamar(ENDPOINTS.wishlist);
+
+  if (!res || !res.ok) return null;
+  const data = await res.json();
+  if (Array.isArray(data)) return data || null;
+  return data.results || null;
+}
+
 // Agregar un producto a la wishlist del usuario
 export async function agregarAWishlist(productId) {
   const res = await llamar(`${ENDPOINTS.wishlist}add-product/`, {
@@ -521,11 +530,32 @@ export async function agregarAWishlist(productId) {
   });
   if (!res) return { error: "No se pudo conectar con la API." };
   if (res.status === 401 || res.status === 403)
-    return { error: "Tu sesión vencio. Vuelve a iniciar sesion." };
+    return { error: "Tu sesión venció. Vuelve a iniciar sesión." };
   if (res.status === 400) {
     const data = await res.json();
     return { error: data.error || "No se pudo agregar a la wishlist." };
   }
   if (!res.ok) return { error: "No se pudo agregar a la wishlist." };
+  revalidatePath("/wishlist");
+  return { success: true };
+}
+
+// Quitar un producto de la wishlist del usuario
+export async function eliminarItemWishlist(productId) {
+  const res = await llamar(`${ENDPOINTS.wishlist}remove-product/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ product_id: productId }),
+  });
+
+  if (!res) return { error: "No se pudo conectar con la API." };
+  if (res.status === 401 || res.status === 403)
+    return { error: "Tu sesión venció. Vuelve a iniciar sesión." };
+  if (res.status === 400) {
+    const data = await res.json();
+    return { error: data.error || "No se pudo eliminar de la wishlist." };
+  }
+  if (!res.ok) return { error: "No se pudo eliminar de la wishlist." };
+  revalidatePath("/wishlist");
   return { success: true };
 }
