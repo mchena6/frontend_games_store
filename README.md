@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# GAME OVER - Tienda de informatica y Hardware
 
-## Getting Started
+## Descripción
+**Game Over** es una plataforma de comercio electrónico especializada en la venta de componentes de hardware, placas de video, procesadores y periféricos. 
 
-First, run the development server:
+El frontend está desarrollado con Next.js, React y Tailwind CSS.
 
+Esta aplicación consume una API RESTful desarrollada en Django para la materia de **Ingeniería de Software**.
+* [Documentación / Repositorio de la API Backend](https://github.com/mchena6/games_store)
+
+---
+
+## Ejecución Local
+
+Sigue estos pasos para levantar el entorno de desarrollo del frontend en tu máquina local:
+
+1. **Clonar el repositorio e ingresar a la carpeta:**
+   ```bash
+   git clone git@github.com:mchena6/frontend_games_store.git
+   cd frontend_games_store
+   ```
+
+2. **Instalar las dependencias:**
+   ```bash
+   npm install
+   ```
+
+3. **Configurar las variables de entorno:**
+   Crea un archivo llamado `.env.local` en la raíz del proyecto y agrega las siguientes variables (ajusta los puertos si es necesario):
+   ```env
+   # URL base donde se encuentra corriendo la API de Django
+   NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+   NODE_ENV === "production"
+   ```
+
+4. **Ejecutar el servidor de desarrollo:**
+   ```bash
+   npm run dev
+   ```
+   La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Testing Unitario
+
+El proyecto utiliza **Vitest**, **Zod** y **RHF** para asegurar la calidad y validación. 
+
+Para correr los tests, ejecuta el siguiente comando en tu terminal:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run test
 ```
+*Vitest ejecutará las pruebas en modo 'watch' mostrando el detalle de los 4 tests unitarios aprobados exitosamente.*
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Enlaces Importantes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* 🌐 **Aplicación Desplegada (Producción):** [https://frontend-games-store.vercel.app/]
+* 📋 **Tablero Kanban (Gestión ágil):** [https://trello.com/b/7eb4Sdnq/games-store]
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Capturas de la Aplicación
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 15-59-54" src="https://github.com/user-attachments/assets/ba5861f7-7a3b-47a3-86a4-fb93d2fb5f09" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 15-57-01" src="https://github.com/user-attachments/assets/714b753f-0598-4dd3-998d-e8a2c7c6bdb4" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 15-57-07" src="https://github.com/user-attachments/assets/4b40bd7e-380f-4158-bc8c-4a8ffa9fec45" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 15-57-38" src="https://github.com/user-attachments/assets/2e436987-8c70-41d3-9688-f9a0977ff957" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 15-58-02" src="https://github.com/user-attachments/assets/d8c1ad0d-ecec-487f-884c-709bb20b9999" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 15-58-40" src="https://github.com/user-attachments/assets/65bddc60-7a5d-4d00-9cbd-0850e8cde12a" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 15-58-46" src="https://github.com/user-attachments/assets/ece01a66-3945-42c5-bb80-394946839574" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 16-00-05" src="https://github.com/user-attachments/assets/e1bb49cf-cd72-4f70-9833-d38b60aadd01" />
+<img width="1366" height="768" alt="Captura de pantalla de 2026-11-11 16-02-03" src="https://github.com/user-attachments/assets/66e05e26-c7d4-4803-9fca-cc039eb96764" />
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Integrantes del Equipo
 
-## Deploy on Vercel
+*   **Martin Chena** - (https://github.com/mchena6)
+*   **Ibañez Ian** - (https://github.com/IanChoDK)
+*   **Pereyra Franco** - (https://github.com/FrancoPereyra13)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Proyecto desarrollado para la EFI de Programacion III.*
